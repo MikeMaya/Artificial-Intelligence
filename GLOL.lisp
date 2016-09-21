@@ -56,7 +56,7 @@
 ;;           1 - Orilla destino (segunda sublista del estado)
 ;;=======================================================================
 (defun  barge-shore (estado)
-"Regresa la orilla del río en la que se encuentra la barca en el estado recibido como parámetro:  0 - origen  1 - destino"
+"Regresa la orilla del río en la que se encuentra la barca (a.k.a granjero) en el estado recibido como parámetro:  0 - origen  1 - destino"
      (if  (= 1 (fourth (first  estado)))  0  1))
 
 
@@ -84,7 +84,7 @@
 ;;=======================================================================
 (defun  valid-state (estado)
 "Predicado. Valida  un estado según las restricciones generales del problema...
-       el estado tiene estructura:  [(<m0><c0><b0>) (<m1><c1><b1>)]"
+       el estado tiene estructura:  [(<Lo0><Ov0><Le0><Gr0>) (<Lo1><Ov1><Le1><Gr1>)]"
     (let* ((orilla  (flip (barge-shore  estado)))  	;;orilla donde no esta el granjero
         (lo0  (first (nth orilla estado)))          ;;el estado tiene estructura ((<Lo0><Ov0><Le0><Gr0>) (<Lo1><Ov1><Le1><Gr1>)) ...
 	    (ov0  (second (nth orilla estado)))
@@ -150,7 +150,7 @@
 ;;=======================================================================
 (defun  remember-state?  (estado  lista-memoria)
 "Busca un estado en una lista de nodos que sirve como memoria de intentos previos
-     el estado tiene estructura:  [(<m0><c0><b0>) (<m1><c1><b1>)],
+     el estado tiene estructura:  [(<Lo0><Ov0><Le0><Gr0>) (<Lo1><Ov1><Le1><Gr1>)],
      el nodo tiene estructura : [<Id> <estado> <id-ancestro> <operador> ]"  
      (cond ((null  lista-memoria)  Nil)
 	        ((equal  estado  (second (first  lista-memoria)))  T)  ;;el estado es igual al que se encuentra en el nodo?
@@ -244,8 +244,8 @@
 			     
      
 ;;=======================================================================
+;;PARTE DE EJEMPLOS DEL PROGRAMA
 ;;=======================================================================
-
 (blind-search '((1 1 1 1)(0 0 0 0)) '((0 0 0 0)(1 1 1 1)) :depth-first)
-
+(blind-search '((1 1 1 1)(0 0 0 0)) '((0 0 0 0)(1 1 1 1)) :breath-first)
 
