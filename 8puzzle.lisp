@@ -301,15 +301,20 @@
 		     estado  (third  nodo)
 		     operador  (nth 4 nodo))
 	  	(push  nodo  *memory*)
-	   	(setq  *current-ancestor*  (first  nodo)) 
-		(setq  sucesores  (expand estado))
-		(setq  sucesores  (filter-memories  sucesores))
-		(loop for  element  in  sucesores  do
-			(cond ((equalp  edo-meta  (first element))  
-	   				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
-		  			(display-solution  (extract-solution  nodo))
-                	(setq  meta-encontrada  T))
-		    	(T (insert-to-open  (first element)  (second element)  metodo)))))))
+		(cond ((equalp  edo-meta  estado) 
+				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  		(display-solution  (extract-solution  nodo))
+		       (setq  meta-encontrada  T)) 
+			(T
+				(setq  *current-ancestor*  (first  nodo)) 
+				(setq  sucesores  (expand estado))
+				(setq  sucesores  (filter-memories  sucesores))
+				(loop for  element  in  sucesores  do
+					(cond ((equalp  edo-meta  (first element))  
+	   					  (format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  				  (display-solution  (extract-solution  nodo))
+                		  (setq  meta-encontrada  T))
+		    			(T (insert-to-open  (first element)  (second element)  metodo)))))))))
 
 (defun  Contextual-search-WI (edo-inicial  edo-meta  metodo)
 "Realiza una busqueda informada para el problema 8puzzle sin imprimir
@@ -333,14 +338,18 @@
 		     estado  (third  nodo)
 		     operador  (nth 4 nodo))
 	  	(push  nodo  *memory*)
-	   	(setq  *current-ancestor*  (first  nodo)) 
-		(setq  sucesores  (expand estado))
-		(setq  sucesores  (filter-memories  sucesores))
-		(loop for  element  in  sucesores  do
-			(cond ((equalp  edo-meta  (first element))  
-	   				(extract-solution  nodo)
-                	(setq  meta-encontrada  T))
-		    	(T (insert-to-open  (first element)  (second element)  metodo)))))))
+		(cond ((equalp  edo-meta  estado) 
+				(extract-solution  nodo)
+		       (setq  meta-encontrada  T)) 
+			(T
+				(setq  *current-ancestor*  (first  nodo)) 
+				(setq  sucesores  (expand estado))
+				(setq  sucesores  (filter-memories  sucesores))
+				(loop for  element  in  sucesores  do
+					(cond ((equalp  edo-meta  (first element))  
+		  				  (extract-solution  nodo)
+                		  (setq  meta-encontrada  T))
+		    			(T (insert-to-open  (first element)  (second element)  metodo)))))))))
 			     
 (defun Mesure-search (edo-inicial  edo-meta  metodo)
 	"Ejecuta la busqueda informada desplegando al final de la informacion de la ejecucion"

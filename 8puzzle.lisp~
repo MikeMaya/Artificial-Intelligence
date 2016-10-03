@@ -3,7 +3,7 @@
 ;;;      Resuelve  el  problema  de  8 puzzle mediante Best First Search
 ;;;
 ;;;      Miguel Angel Maya Hernandez
-;;;  27 de septiembre, 2016
+;;;  28 de septiembre, 2016
 ;;;=======================================================================
 (defparameter  *open* '())       ;; Frontera de busqueda...                                              
 (defparameter  *memory* '())   ;; Memoria de intentos previos
@@ -41,7 +41,7 @@
 ;;
 ;;		WRONGAPT - Determina la aptitud de un estado segun el numero de elementos en un lugar equivocado respecto al estado meta
 ;;		MOVESAPT - Determina la aptitud de un estado segun la sumatoria de la distancia Manhatan de todas las piezas a sus lugares correctos
-;;  	CUSTOMAPT - 
+;;  	CUSTOMAPT - Determina la aptitud de un estado segun el promedio de distancias euclidianas
 ;;		SETAPTI - Permite determinar la aptitud de un estado segun el metodo proporcionado
 ;;
 ;;=======================================================================
@@ -86,7 +86,7 @@
 	    ((eql  metodo :moves-left)
 		 (setq aptitud (movesAPT estado)))
 	    ((eql  metodo :random-value)
-		 (setq aptitud (random 50)))
+		 (setq aptitud (random 10)))
 	    ((eql  metodo :custom-value)
 		 (setq aptitud (customAPT estado)))
 	   	(T  Nil))))
@@ -285,7 +285,7 @@
     			:wrong-pieces	número de piezas en lugar incorrecto
 			   	:moves-left   	suma de movimientos necesarios para colocar cada pieza en su lugar
 				:random-value  	evaluación aleatoria
-				:custom-value "
+				:custom-value   promedio de las distancias euclidianas del estado con su lugar correcto"
 
   (reset-all)
   (let ((nodo nil)
@@ -304,12 +304,17 @@
 	   	(setq  *current-ancestor*  (first  nodo)) 
 		(setq  sucesores  (expand estado))
 		(setq  sucesores  (filter-memories  sucesores))
-		(loop for  element  in  sucesores  do
-			(cond ((equalp  edo-meta  (first element))  
-	   				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
-		  			(display-solution  (extract-solution  nodo))
-                	(setq  meta-encontrada  T))
-		    	(T (insert-to-open  (first element)  (second element)  metodo)))))))
+		(cond ((equalp  edo-meta  estado) 
+				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  		(display-solution  (extract-solution  nodo))
+                (setq  meta-encontrada  T)) 
+			(T
+				(loop for  element  in  sucesores  do
+					(cond ((equalp  edo-meta  (first element))  
+	   					  (format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  				  (display-solution  (extract-solution  nodo))
+                		  (setq  meta-encontrada  T))
+		    			(T (insert-to-open  (first element)  (second element)  metodo)))))))))
 
 (defun  Contextual-search-WI (edo-inicial  edo-meta  metodo)
 "Realiza una busqueda informada para el problema 8puzzle sin imprimir
@@ -317,7 +322,7 @@
     			:wrong-pieces	número de piezas en lugar incorrecto
 			   	:moves-left   	suma de movimientos necesarios para colocar cada pieza en su lugar
 				:random-value  	evaluación aleatoria
-				:custom-value "
+				:custom-value   promedio de las distancias euclidianas del estado con su lugar correcto"
 
   (reset-all)
   (let ((nodo nil)
@@ -333,7 +338,6 @@
 		     estado  (third  nodo)
 		     operador  (nth 4 nodo))
 	  	(push  nodo  *memory*)
-	   (print nodo)
 	   	(setq  *current-ancestor*  (first  nodo)) 
 		(setq  sucesores  (expand estado))
 		(setq  sucesores  (filter-memories  sucesores))
@@ -362,10 +366,13 @@
 ;;=======================================================================
 
 ;(Contextual-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):moves-left)
-;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):moves-left)
+(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):moves-left)
 
 ;(Contextual-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):wrong-pieces)
 ;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):wrong-pieces)
 
 ;(Contextual-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):random-value)
+;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):random-value)
+
+;(Contextual-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):custom-value)
 ;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):custom-value)

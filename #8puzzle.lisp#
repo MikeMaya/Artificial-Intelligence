@@ -3,7 +3,7 @@
 ;;;      Resuelve  el  problema  de  8 puzzle mediante Best First Search
 ;;;
 ;;;      Miguel Angel Maya Hernandez
-;;;  27 de septiembre, 2016
+;;;  28 de septiembre, 2016
 ;;;=======================================================================
 (defparameter  *open* '())       ;; Frontera de busqueda...                                              
 (defparameter  *memory* '())   ;; Memoria de intentos previos
@@ -41,7 +41,7 @@
 ;;
 ;;		WRONGAPT - Determina la aptitud de un estado segun el numero de elementos en un lugar equivocado respecto al estado meta
 ;;		MOVESAPT - Determina la aptitud de un estado segun la sumatoria de la distancia Manhatan de todas las piezas a sus lugares correctos
-;;  	CUSTOMAPT - 
+;;  	CUSTOMAPT - Determina la aptitud de un estado segun el promedio de distancias euclidianas
 ;;		SETAPTI - Permite determinar la aptitud de un estado segun el metodo proporcionado
 ;;
 ;;=======================================================================
@@ -62,21 +62,21 @@
 	  	  (setq actual (aref estado i j))
 		  (loop for i1 from 0 to 2 do
 			(loop for j1 from 0 to 2 do
-			  (if (eql actual (aref *edoMeta* i1 j1)) (setq xi i yi j))))
-				(+ sumatoria (+ (abs (- i xi)) (abs (- j yi)) ))))
+			  (if (eql actual (aref *edoMeta* i1 j1)) (setq xi i1 yi j1))))
+				(setq sumatoria (+ sumatoria (+ (abs (- i xi)) (abs (- j yi)) )))))
 		sumatoria))
 
-;;Falta programarla
 (defun customAPT (estado)
-	(let ((minimo 10) (actual 0) (xi 0) (yi 0))
+	"Determina la aptitud de un estado segun el promedio de distancias euclidianas"
+	(let ((sumatoria 0) (actual 0) (xi 0) (yi 0))
 	  (loop for i from 0 to 2 do 
 		(loop for j from 0 to 2 do
 	  	  (setq actual (aref estado i j))
-		  (loop for i1 from 0 to 2 do
-			(loop for j1 from 0 to 2 do
-			  (if (eql actual (aref *edoMeta* i1 j1)) (setq xi i yi j))))
-		  (if (< (+ (abs (- i xi)) (abs (- j yi))) minimo) (setq minimo (+ (abs (- i xi)) (abs (- j yi)))))))
-		minimo))
+		    (loop for i1 from 0 to 2 do
+			  (loop for j1 from 0 to 2 do
+			    (if (eql actual (aref *edoMeta* i1 j1)) (setq xi i1 yi j1))))
+		    (setq sumatoria (+ sumatoria (sqrt (+ (* (- i xi) (- i xi)) (* (- j yi) (- j yi))))))))
+		(float (/ sumatoria 9)) ))
 
 (defun setApti (estado metodo)
   "Permite determinar la aptitud de un estado segun el metodo proporcionado"
@@ -86,7 +86,7 @@
 	    ((eql  metodo :moves-left)
 		 (setq aptitud (movesAPT estado)))
 	    ((eql  metodo :random-value)
-		 (setq aptitud (random 50)))
+		 (setq aptitud (random 10)))
 	    ((eql  metodo :custom-value)
 		 (setq aptitud (customAPT estado)))
 	   	(T  Nil))))
@@ -282,10 +282,10 @@
 (defun  Contextual-search (edo-inicial  edo-meta  metodo)
 "Realiza una busqueda informada para el problema 8puzzle
     los mÃ©todos posibles para evaluar la aptitud son: 
-    			:wrong-pieces	numero de piezas en lugar incorrecto
+    			:wrong-pieces	nÃºmero de piezas en lugar incorrecto
 			   	:moves-left   	suma de movimientos necesarios para colocar cada pieza en su lugar
 				:random-value  	evaluaciÃ³n aleatoria
-				:custom-value "
+				:custom-value   promedio de las distancias euclidianas del estado con su lugar correcto"
 
   (reset-all)
   (let ((nodo nil)
@@ -301,15 +301,20 @@
 		     estado  (third  nodo)
 		     operador  (nth 4 nodo))
 	  	(push  nodo  *memory*)
-	   	(setq  *current-ancestor*  (first  nodo)) 
-		(setq  sucesores  (expand estado))
-		(setq  sucesores  (filter-memories  sucesores))
-		(loop for  element  in  sucesores  do
-			(cond ((equalp  edo-meta  (first element))  
-	   				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
-		  			(display-solution  (extract-solution  nodo))
-                	(setq  meta-encontrada  T))
-		    	(T (insert-to-open  (first element)  (second element)  metodo)))))))
+		(cond ((equalp  edo-meta  estado) 
+				(format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  		(display-solution  (extract-solution  nodo))
+		       (setq  meta-encontrada  T)) 
+			(T
+				(setq  *current-ancestor*  (first  nodo)) 
+				(setq  sucesores  (expand estado))
+				(setq  sucesores  (filter-memories  sucesores))
+				(loop for  element  in  sucesores  do
+					(cond ((equalp  edo-meta  (first element))  
+	   					  (format  t  "Exito. Meta encontrada en ~A  intentos~%" (first  nodo))	
+		  				  (display-solution  (extract-solution  nodo))
+                		  (setq  meta-encontrada  T))
+		    			(T (insert-to-open  (first element)  (second element)  metodo)))))))))
 
 (defun  Contextual-search-WI (edo-inicial  edo-meta  metodo)
 "Realiza una busqueda informada para el problema 8puzzle sin imprimir
@@ -317,7 +322,7 @@
     			:wrong-pieces	nÃºmero de piezas en lugar incorrecto
 			   	:moves-left   	suma de movimientos necesarios para colocar cada pieza en su lugar
 				:random-value  	evaluaciÃ³n aleatoria
-				:custom-value "
+				:custom-value   promedio de las distancias euclidianas del estado con su lugar correcto"
 
   (reset-all)
   (let ((nodo nil)
@@ -333,14 +338,18 @@
 		     estado  (third  nodo)
 		     operador  (nth 4 nodo))
 	  	(push  nodo  *memory*)
-	   	(setq  *current-ancestor*  (first  nodo)) 
-		(setq  sucesores  (expand estado))
-		(setq  sucesores  (filter-memories  sucesores))
-		(loop for  element  in  sucesores  do
-			(cond ((equalp  edo-meta  (first element))  
-	   				(extract-solution  nodo)
-                	(setq  meta-encontrada  T))
-		    	(T (insert-to-open  (first element)  (second element)  metodo)))))))
+		(cond ((equalp  edo-meta  estado) 
+				(extract-solution  nodo)
+		       (setq  meta-encontrada  T)) 
+			(T
+				(setq  *current-ancestor*  (first  nodo)) 
+				(setq  sucesores  (expand estado))
+				(setq  sucesores  (filter-memories  sucesores))
+				(loop for  element  in  sucesores  do
+					(cond ((equalp  edo-meta  (first element))  
+		  				  (extract-solution  nodo)
+                		  (setq  meta-encontrada  T))
+		    			(T (insert-to-open  (first element)  (second element)  metodo)))))))))
 			     
 (defun Mesure-search (edo-inicial  edo-meta  metodo)
 	"Ejecuta la busqueda informada desplegando al final de la informacion de la ejecucion"
@@ -370,4 +379,4 @@
 ;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):random-value)
 
 ;(Contextual-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):custom-value)
-;(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((1 2 3) (8 0 4) (7 6 5)):custom-value)
+(Mesure-search #2A((2 8 3) (1 4 5) (7 0 6)) #2A((2 8 3) (1 4 5) (7 0 6)):custom-value)
