@@ -1,9 +1,9 @@
 ;;;=======================================================================
-;;;  2DMazes.lisp
-;;;      Resuelve un laberinto en 2D
+;;;  3DMazes.lisp
+;;;      Resuelve un laberinto en 3D
 ;;;
 ;;;      Miguel Angel Maya Hernandez
-;;;  3 de Octubre, 2016
+;;;  6 de Octubre, 2016
 ;;;=======================================================================
 (load "maze_lib.lisp")
 
@@ -14,6 +14,7 @@
 (defparameter *limX* 0)
 (defparameter *limY* 0)
 (defparameter *auxLevel* 0)
+
 ;; Operadores para el problema 8puzzle	
 ;; Formato de operador (:etiqueta  (x y) movimiento)
 
@@ -91,7 +92,6 @@
 "Busca un nodo en open, si encuentra el mismo estado con mejor aptitud lo deja, si es con peor lo quita e inserta nodo"
 	(labels (
 	  (find-state (estado aptitud lv lista) ;;si se encuentra el estado y es mejor -> T
-	  	;;;(format "estado ~a contra ~a apti ~a contra ~a" estado (third (first lista)) aptitud )
 	  	(cond ((null lista) (list nil nil))
 	  	  ( (and (equal estado (third (first lista))) (= lv (nth 6 (first lista))))  (if (< aptitud (second (first lista))) (list T T) (list T nil)))
 	  	  (T (find-state estado aptitud lv (rest lista))))) 
@@ -99,7 +99,6 @@
 		(cond ((equal state (third (first lista))) (rest lista))
 			(t (cons (first lista) (eliminate-state state (rest lista)))))))
 	  (let ((res (find-state (third nodo) (second nodo) (nth 6 nodo) *open*)))
-	  	;;;(format t "Nodo ~a encontro ~a ~%" nodo res)
 	  	(cond ((and (first res) (second res)) ;;Se encontro y se tiene que remplazar
 			(setq *open* (eliminate-state (third nodo) *open*)
 				*open* (insert-in-order nodo *open*)))
@@ -132,11 +131,9 @@
   		   (p nil) (d nil))
   	(setq *auxLevel* 1) 
   	;;Validamos primero que exista en el mapa
-  	;;(format t "~a ~a ~a ~a~%" estado op newX newY)
   	(cond ((not (and (>= newX 0) (< newX *limX*) (>= newY 0) (< newY *limY*))) nil)
   	  (T (setq p (get-cell-walls (first estado) (second estado)) d (get-cell-walls newX newY))
   	  	;;validamos que se pueda avanzar en la direccion
-  	  	;;(format t "~a ~a~%" p d)
   	  	(if (or (= p 16) (= p 17)) 
   	  		(cond ((and (= p 16) (= level 0) (or (eql  (first op) :Arriba) (eql  (first op) :Abajo))) 
   	  				(if (= d 16) (setq *auxLevel* 0)) 
@@ -326,7 +323,6 @@
 		     operador  (nth 4 nodo))
 	  	(cond ((not (remember-state? estado level *memory*)) 
 	  	(push  nodo  *memory*)
-	  	;;(format t "nodo ~a ~%Frontera ~&~a~% Memoria~%~a~%" nodo *open* *memory*)
 	  	(cond ((equal  edo-meta  estado)
 	   	        (extract-solution  nodo)
                 (setq  meta-encontrada  T))
@@ -334,9 +330,7 @@
 	          	(setq  *current-ancestor*  (first  nodo)) 
 	          	(setq  *current-ancestor-deep*  (nth 5 nodo))
 		    	(setq  sucesores  (expand estado level))
-		    	;;(format t "sucesores ~a~%" sucesores)
 		    	(setq  sucesores  (filter-memories  sucesores metodo))
-		    	;;(format t "sucesores filtrados ~a~%" sucesores)
 		    	(loop for  element  in  sucesores  do
 	     			(insert-to-open  (first element)  (second element) (third element) metodo))))))  )) )
 
@@ -365,8 +359,3 @@
 (add-algorithm 'Depth-First-Search)
 (add-algorithm 'Breath-First-Search)
 (start-maze)
-
-;;(or (remember-state? '(5 5) *memory*)
-  ;;  (if (eql :BestFS :BestFS) (remember-state?   *open*) nil))
-;
-;(12 11 (4 1) 9 0 6 1) 
