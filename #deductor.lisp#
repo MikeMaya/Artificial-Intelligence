@@ -1,0 +1,80 @@
+(load "package.lisp")
+(load "tables.lisp")
+(load "ddr.lisp")
+(in-package ddr)
+
+(defparameter *monkey-kb*
+  '(
+  	;;Si el mono esta en la misma posicion que la caja y el palo 
+  	;;y es la posicion de los platanos, es verdadero que puede comer
+  	(<- (puede-comer (estado Mono ?pos Caja ?pos Palo ?pos MonoSobre caja) Terminado)
+  		(en platanos ?pos))
+
+ 	;;Para poder realizar la transicion del estado 1
+ 	;; al estado 2 es necesario que ocurra una accion
+  	(<- (puede-comer ?estado1 (hacer ?accion ?pasos))
+        (transicion ?estado1 ?accion ?estado2)
+        (puede-comer ?estado2 ?pasos))
+
+  	;;ACCION CON LA CAJA: Trepar
+  	;;Subirse a la caja si es que el mono esta en la posicion de la caja
+  	;;Solo podra subir si tiene el palo en la misma posicion
+  	(<- (transicion (estado Mono ?pos Caja ?pos Palo ?pos MonoSobre piso)
+                 trepar
+                 (estado Mono ?pos Caja ?pos Palo ?pos MonoSobre caja)))
+
+    ;;ACCION CON LA CAJA: Empujar
+  	;;El mono puede empujar la caja hacia los platanos
+  	;;si esta en la misma posicion que la caja 
+    (<- (transicion (estado Mono ?pos1 Caja ?pos1 Palo ?pos3 MonoSobre piso)
+                 (empujar ?pos1 ?pos2)
+                 (estado Mono ?pos2 Caja ?pos2 Palo ?pos3 MonoSobre piso))
+        (en platanos ?pos2)
+        (diferente ?pos1 ?pos2)
+        (diferente ?pos1 ?pos3)
+        (diferente ?pos2 ?pos3))
+
+    ;; ACCION DEL MONO: Caminar a la caja
+    (<- (transicion (estado Mono ?pos1 Caja ?pos2 Palo ?pos3 MonoSobre piso)
+                 (caminar ?pos1 ?pos2)
+                 (estado Mono ?pos2 Caja ?pos2 Palo ?pos3 MonoSobre piso))
+        (diferente ?pos1 ?pos2)
+        (diferente ?pos1 ?pos3)
+        (diferente ?pos2 ?pos3))
+    
+    ;;ACCION CON EL PALO: Tomar
+    ;;El mono puede tomar el palo para llevarlo a los platanos
+    ;;El mono debe estar en la misma posicion que el palo 
+    ;;Se debe hacer despues de empujar la caja
+    (<- (transicion (estado Mono ?pos1 Caja ?pos2 Palo ?pos1 MonoSobre piso)
+                 (tomar ?pos1 ?pos2)
+                 (estado Mono ?pos2 Caja ?pos2 Palo ?pos2 MonoSobre piso))
+        (en platanos ?pos2)
+        (diferente ?pos1 ?pos2))
+
+	;; ACCION DEL MONO: Caminar al palo
+    (<- (transicion (estado Mono ?pos1 Caja ?pos1 Palo ?pos2 MonoSobre piso)
+                 (caminar ?pos1 ?pos2)
+                 (estado Mono ?pos2 Caja ?pos1 Palo ?pos2 MonoSobre piso))
+        (diferente ?pos1 ?pos2))
+
+    ;;Conocimiento del entorno
+    (diferente ventana centro)
+    (diferente ventana puerta)
+
+    (diferente centro ventana)
+    (diferente centro puerta)
+
+    (diferente puerta ventana)
+    (diferente puerta centro)
+
+    (diferente caja piso)
+    (diferente piso caja)
+ 
+    (en platanos centro)
+))
+
+(ask '(puede-comer (estado Mono centro Caja centro Palo centro MonoSobre caja) ?pasos))
+(ask '(puede-comer (estado Mono centro Caja centro Palo centro MonoSobre piso) ?pasos))
+(ask '(puede-comer (estado Mono puerta Caja centro Palo puerta MonoSobre piso) ?pasos))
+(ask '(puede-comer (estado Mono centro Caja ventana Palo puerta MonoSobre piso) ?pasos))
